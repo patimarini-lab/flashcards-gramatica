@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gramática em Cartões</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f4; --bg3: #eeece8;
+    --text: #1a1a1a; --text2: #6b7280; --text3: #9ca3af;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.2);
+    --radius-md: 8px; --radius-lg: 12px;
+    --teal: #1D9E75; --teal-light: #E1F5EE; --teal-mid: #5DCAA5; --teal-dark: #0F6E56;
+    --blue-light: #E6F1FB; --blue: #185FA5; --blue-mid: #85B7EB;
+    --amber-light: #FAEEDA; --amber: #854F0B; --amber-mid: #EF9F27;
+    --red-light: #FCEBEB; --red: #A32D2D; --red-mid: #F09595;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1e; --bg2: #2c2c2e; --bg3: #3a3a3c;
+      --text: #f2f2f7; --text2: #aeaeb2; --text3: #636366;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
+      --teal-light: #0a3d2b; --teal-dark: #5DCAA5;
+      --blue-light: #0c2340; --blue: #85B7EB;
+      --amber-light: #3d2800; --amber: #EF9F27;
+      --red-light: #3d0f0f; --red: #F09595;
+    }
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; padding: 1rem; }
+  .app { max-width: 680px; margin: 0 auto; }
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; padding: 1rem 1.25rem; background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); }
+  .header h1 { font-size: 17px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .header h1 i { color: var(--teal); font-size: 20px; }
+  .header-right { display: flex; align-items: center; gap: 8px; }
+  .progress-text { font-size: 13px; color: var(--text2); }
+  .io-btn { font-size: 12px; padding: 5px 10px; border-radius: var(--radius-md); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text2); cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.15s; }
+  .io-btn:hover { background: var(--bg); color: var(--text); }
+
+  .tabs { display: flex; border: 0.5px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 1.25rem; background: var(--bg2); }
+  .tab { flex: 1; padding: 9px 8px; font-size: 13px; font-weight: 400; background: transparent; color: var(--text2); cursor: pointer; border: none; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 4px; }
+  .tab.active { background: var(--bg); color: var(--text); font-weight: 500; }
+  .tab:not(:last-child) { border-right: 0.5px solid var(--border); }
+
+  .filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.25rem; align-items: center; }
+  .filter-chip { font-size: 12px; padding: 5px 11px; border-radius: 20px; border: 0.5px solid var(--border); background: var(--bg2); color: var(--text2); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .filter-chip.active { background: var(--teal-light); color: var(--teal-dark); border-color: var(--teal-mid); font-weight: 500; }
+  .fcount { font-size: 11px; background: var(--bg3); color: var(--text2); border-radius: 10px; padding: 1px 6px; margin-left: 4px; border: 0.5px solid var(--border); }
+  .filter-chip.active .fcount { background: rgba(93,202,165,0.3); color: var(--teal-dark); border-color: var(--teal-mid); }
+
+  .scene { width: 100%; height: 300px; perspective: 1200px; margin-bottom: 1.25rem; cursor: pointer; }
+  .card-wrap { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1); }
+  .card-wrap.flipped { transform: rotateY(180deg); }
+  .card-face { position: absolute; inset: 0; border-radius: var(--radius-lg); border: 0.5px solid var(--border); backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; flex-direction: column; padding: 1.5rem; background: var(--bg); }
+  .card-back { transform: rotateY(180deg); }
+  .card-tag { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 1rem; color: var(--teal); }
+  .card-question { font-size: 19px; font-weight: 500; color: var(--text); line-height: 1.4; flex: 1; display: flex; align-items: center; }
+  .card-hint { font-size: 13px; color: var(--text3); text-align: center; margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 5px; }
+  .card-rule { font-size: 15px; font-weight: 500; color: var(--text); line-height: 1.5; margin-bottom: 0.65rem; }
+  .card-example { font-size: 13px; color: var(--text2); line-height: 1.6; background: var(--bg2); border-left: 2px solid var(--teal); padding: 0.6rem 0.8rem; border-radius: 0 var(--radius-md) var(--radius-md) 0; margin-bottom: 0.65rem; flex: 1; }
+  .card-example em { color: var(--text); font-style: italic; }
+  .rating-row { display: flex; gap: 8px; margin-top: auto; }
+  .rating-btn { flex: 1; padding: 8px; font-size: 12px; font-weight: 500; border-radius: var(--radius-md); border: 0.5px solid; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px; }
+  .rating-btn.easy { background: var(--teal-light); color: var(--teal-dark); border-color: var(--teal-mid); }
+  .rating-btn.medium { background: var(--amber-light); color: var(--amber); border-color: var(--amber-mid); }
+  .rating-btn.hard { background: var(--red-light); color: var(--red); border-color: var(--red-mid); }
+  .rating-btn:hover { opacity: 0.8; }
+
+  .nav-row { display: flex; align-items: center; gap: 8px; margin-bottom: 1.25rem; }
+  .nav-btn { padding: 8px 14px; font-size: 13px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-md); cursor: pointer; color: var(--text); transition: all 0.15s; display: flex; align-items: center; gap: 5px; }
+  .nav-btn:hover { background: var(--bg2); }
+  .nav-btn:disabled { opacity: 0.35; cursor: default; }
+  .card-counter { flex: 1; text-align: center; font-size: 13px; color: var(--text2); }
+  .icon-btn { padding: 8px 10px; font-size: 15px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-md); cursor: pointer; color: var(--text2); transition: all 0.15s; }
+  .icon-btn:hover { background: var(--bg2); color: var(--text); }
+  .progress-bar { height: 3px; background: var(--bg2); border-radius: 2px; margin-bottom: 1.25rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--teal); border-radius: 2px; transition: width 0.3s ease; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 1.25rem; }
+  .stat-card { background: var(--bg); border-radius: var(--radius-md); padding: 0.75rem; text-align: center; border: 0.5px solid var(--border); }
+  .stat-num { font-size: 22px; font-weight: 600; }
+  .stat-lbl { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .stat-card.green .stat-num { color: var(--teal-dark); }
+  .stat-card.amber .stat-num { color: var(--amber); }
+  .stat-card.red .stat-num { color: var(--red); }
+
+  .section { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+  .section h2 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 1rem; }
+  .field { margin-bottom: 0.85rem; }
+  .field label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 5px; }
+  .field input, .field textarea, .field select {
+    width: 100%; padding: 8px 10px; font-size: 14px; border: 0.5px solid var(--border2);
+    border-radius: var(--radius-md); background: var(--bg2); color: var(--text);
+    font-family: inherit; transition: border-color 0.15s; outline: none;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--teal); }
+  .field textarea { min-height: 72px; resize: vertical; }
+  .btn-primary { padding: 9px 18px; font-size: 13px; font-weight: 500; background: var(--teal); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; transition: opacity 0.15s; display: inline-flex; align-items: center; gap: 5px; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-primary.full { width: 100%; justify-content: center; }
+  .btn-secondary { padding: 9px 18px; font-size: 13px; background: var(--bg2); color: var(--text); border: 0.5px solid var(--border); border-radius: var(--radius-md); cursor: pointer; transition: all 0.15s; }
+  .btn-secondary:hover { background: var(--bg3); }
+  .btn-row { display: flex; gap: 8px; }
+  .edit-hint { font-size: 12px; color: var(--blue); background: var(--blue-light); border-radius: var(--radius-md); padding: 7px 10px; margin-bottom: 1rem; display: none; align-items: center; gap: 6px; }
+
+  .deck-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+  .deck-list { display: flex; flex-direction: column; gap: 7px; }
+  .deck-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-md); gap: 8px; }
+  .deck-item-text { flex: 1; min-width: 0; }
+  .deck-item-text span { font-size: 14px; color: var(--text); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .deck-item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .act-btn { background: none; border: 0.5px solid var(--border); cursor: pointer; font-size: 14px; padding: 5px 8px; border-radius: var(--radius-md); color: var(--text2); transition: all 0.15s; }
+  .act-btn.edit:hover { color: var(--blue); background: var(--blue-light); border-color: var(--blue-mid); }
+  .act-btn.del:hover { color: var(--red); background: var(--red-light); border-color: var(--red-mid); }
+
+  .cat-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 1rem; }
+  .cat-item { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: var(--bg2); border-radius: var(--radius-md); border: 0.5px solid var(--border); }
+  .cat-item span { flex: 1; font-size: 14px; color: var(--text); }
+  .cat-item small { font-size: 12px; color: var(--text2); white-space: nowrap; }
+  .cat-add-row { display: flex; gap: 8px; }
+  .cat-add-row input { flex: 1; padding: 8px 10px; font-size: 14px; border: 0.5px solid var(--border2); border-radius: var(--radius-md); background: var(--bg2); color: var(--text); font-family: inherit; outline: none; }
+  .cat-add-row input:focus { border-color: var(--teal); }
+
+  .empty { text-align: center; padding: 2.5rem 1rem; color: var(--text2); font-size: 14px; }
+  .empty i { font-size: 32px; display: block; margin-bottom: 8px; color: var(--text3); }
+  .no-cards-msg { text-align: center; padding: 2rem 1rem; color: var(--text2); font-size: 14px; background: var(--bg2); border-radius: var(--radius-lg); }
+  .no-cards-msg i { font-size: 28px; display: block; margin-bottom: 8px; color: var(--text3); }
+  .cbadge { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 10px; background: var(--teal-light); color: var(--teal-dark); font-weight: 500; margin-top: 3px; }
+  input[type="file"] { display: none; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1><i class="ti ti-cards"></i>Gramática em Cartões</h1>
+    <div class="header-right">
+      <span class="progress-text" id="progress-text">0 revisados hoje</span>
+      <button class="io-btn" onclick="exportData()" title="Exportar cartões como JSON">
+        <i class="ti ti-download"></i> Exportar
+      </button>
+      <button class="io-btn" onclick="document.getElementById('import-file').click()" title="Importar cartões de JSON">
+        <i class="ti ti-upload"></i> Importar
+      </button>
+      <input type="file" id="import-file" accept=".json" onchange="importData(event)">
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('study')"><i class="ti ti-stack-2"></i> Estudar</button>
+    <button class="tab" onclick="switchTab('add')"><i class="ti ti-plus"></i> Cartão</button>
+    <button class="tab" onclick="switchTab('deck')"><i class="ti ti-list"></i> Meus Cartões</button>
+    <button class="tab" onclick="switchTab('cats')"><i class="ti ti-tag"></i> Categorias</button>
+  </div>
+
+  <!-- ESTUDAR -->
+  <div id="tab-study">
+    <div class="filter-row" id="study-filters"></div>
+    <div class="stats-grid">
+      <div class="stat-card green"><div class="stat-num" id="stat-easy">0</div><div class="stat-lbl">Fácil</div></div>
+      <div class="stat-card amber"><div class="stat-num" id="stat-medium">0</div><div class="stat-lbl">Médio</div></div>
+      <div class="stat-card red"><div class="stat-num" id="stat-hard">0</div><div class="stat-lbl">Difícil</div></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div id="study-area">
+      <div class="scene" onclick="flipCard()">
+        <div class="card-wrap" id="card-wrap">
+          <div class="card-face card-front">
+            <div class="card-tag" id="card-tag"></div>
+            <div class="card-question" id="card-question"></div>
+            <div class="card-hint"><i class="ti ti-hand-click"></i> Clique para ver a resposta</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="card-tag" id="card-tag-back"></div>
+            <div class="card-rule" id="card-rule"></div>
+            <div class="card-example" id="card-example"></div>
+            <div class="rating-row">
+              <button class="rating-btn easy" onclick="rate('easy',event)"><i class="ti ti-circle-check"></i> Fácil</button>
+              <button class="rating-btn medium" onclick="rate('medium',event)"><i class="ti ti-circle-half-2"></i> Médio</button>
+              <button class="rating-btn hard" onclick="rate('hard',event)"><i class="ti ti-circle-x"></i> Difícil</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="nav-row">
+        <button class="nav-btn" id="prev-btn" onclick="prevCard()"><i class="ti ti-arrow-left"></i> Anterior</button>
+        <span class="card-counter" id="card-counter"></span>
+        <button class="nav-btn" id="next-btn" onclick="nextCard()">Próximo <i class="ti ti-arrow-right"></i></button>
+        <button class="icon-btn" onclick="editCurrentCard()" title="Editar cartão atual"><i class="ti ti-edit"></i></button>
+        <button class="icon-btn" onclick="shuffle()" title="Embaralhar"><i class="ti ti-arrows-shuffle"></i></button>
+      </div>
+    </div>
+    <div id="study-empty" class="empty" style="display:none">
+      <i class="ti ti-mood-happy"></i>
+      Nenhum cartão ainda. Vá em <strong>Cartão</strong> para criar o primeiro!
+    </div>
+    <div id="study-no-filter" class="no-cards-msg" style="display:none">
+      <i class="ti ti-filter-off"></i>
+      Nenhum cartão nessa categoria ainda.
+    </div>
+  </div>
+
+  <!-- ADICIONAR / EDITAR -->
+  <div id="tab-add" style="display:none">
+    <div class="edit-hint" id="edit-hint"><i class="ti ti-edit"></i> Modo edição — alterando um cartão existente.</div>
+    <div class="section">
+      <h2 id="form-title">Novo Cartão</h2>
+      <input type="hidden" id="edit-id">
+      <div class="field"><label for="inp-cat">Categoria</label><select id="inp-cat"></select></div>
+      <div class="field"><label for="inp-q">Pergunta / Conceito</label><textarea id="inp-q" placeholder="Ex: Quando usar 'mas' vs 'mais'?"></textarea></div>
+      <div class="field"><label for="inp-rule">Regra / Explicação</label><textarea id="inp-rule" placeholder="Ex: 'Mas' é conjunção adversativa. 'Mais' indica quantidade."></textarea></div>
+      <div class="field"><label for="inp-ex">Exemplo</label><textarea id="inp-ex" placeholder="Ex: Tentei, mas não consegui."></textarea></div>
+      <div class="btn-row">
+        <button class="btn-secondary" id="cancel-btn" onclick="cancelEdit()" style="display:none">Cancelar</button>
+        <button class="btn-primary full" id="save-btn" onclick="saveCard()"><i class="ti ti-check"></i> <span id="save-label">Adicionar Cartão</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEUS CARTÕES -->
+  <div id="tab-deck" style="display:none">
+    <div class="deck-filters" id="deck-filters"></div>
+    <div class="deck-list" id="deck-list"></div>
+  </div>
+
+  <!-- CATEGORIAS -->
+  <div id="tab-cats" style="display:none">
+    <div class="section">
+      <h2>Gerenciar Categorias</h2>
+      <div class="cat-list" id="cat-list"></div>
+      <div class="cat-add-row">
+        <input type="text" id="new-cat-input" placeholder="Nome da nova categoria..." maxlength="40"
+          onkeydown="if(event.key==='Enter')addCategory()">
+        <button class="btn-primary" onclick="addCategory()"><i class="ti ti-plus"></i> Adicionar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_CATS = ["Verbos","Substantivos","Pontuação","Concordância","Regência","Crase","Inglês","Outro"];
+const DEFAULT_CARDS = [
+  {id:1,category:"Pontuação",question:"Quando usar vírgula antes de 'mas'?",rule:"Usa-se vírgula antes de conjunções adversativas como 'mas', 'porém', 'contudo', 'todavia', 'entretanto'.",example:"<em>Estudei muito, mas não passei.</em><br>Separando orações coordenadas adversativas.",ratings:{}},
+  {id:2,category:"Crase",question:"Qual é a regra básica da crase?",rule:"Crase ocorre quando há fusão da preposição 'a' com o artigo 'a' (ou 'as'). Usa-se com palavras femininas precedidas de artigo definido.",example:"<em>Fui à cidade. (a + a cidade)</em><br>Dica: substitua por 'ao' — se couber, use crase.",ratings:{}},
+  {id:3,category:"Concordância",question:"Como funciona a concordância verbal com sujeito composto?",rule:"Sujeito composto posposto ao verbo pode ficar no singular (concordando com o núcleo mais próximo) ou no plural.",example:"<em>Chegou o aluno e a professora.</em><br><em>Chegaram o aluno e a professora.</em>",ratings:{}},
+  {id:4,category:"Inglês",question:"Qual a diferença entre 'since' e 'for'?",rule:"'Since' indica o ponto de início de uma ação. 'For' indica a duração (período).",example:"<em>I've lived here since 2020.</em> (desde 2020)<br><em>I've lived here for 4 years.</em> (por 4 anos)",ratings:{}},
+  {id:5,category:"Verbos",question:"Quando usar 'haver' vs 'ter' como verbo existencial?",rule:"Na norma culta, 'haver' impessoal não é conjugado na 3ª pessoa do plural.",example:"<em>Há muitos problemas. ✓</em><br><em>Haviam muitos problemas. ✗</em>",ratings:{}},
+  {id:6,category:"Regência",question:"'Assistir' — transitivo direto ou indireto?",rule:"No sentido de 'ver/presenciar', 'assistir' exige preposição 'a' (regência indireta).",example:"<em>Assisti ao filme. ✓</em><br><em>Assisti o filme. ✗</em>",ratings:{}},
+];
+
+let cards=[], categories=[], current=0, isFlipped=false;
+let stats={easy:0,medium:0,hard:0}, order=[];
+let activeStudyFilter='Todos', activeDeckFilter='Todos', editingCatIndex=-1;
+
+function load() {
+  try{const s=localStorage.getItem('gfc_cards_v4');cards=s?JSON.parse(s):JSON.parse(JSON.stringify(DEFAULT_CARDS));}catch(e){cards=JSON.parse(JSON.stringify(DEFAULT_CARDS));}
+  try{const s=localStorage.getItem('gfc_cats_v4');categories=s?JSON.parse(s):[...DEFAULT_CATS];}catch(e){categories=[...DEFAULT_CATS];}
+  syncCategories(); buildOrder();
+}
+function persist() {
+  try{localStorage.setItem('gfc_cards_v4',JSON.stringify(cards));}catch(e){}
+  try{localStorage.setItem('gfc_cats_v4',JSON.stringify(categories));}catch(e){}
+}
+function syncCategories(){cards.forEach(c=>{if(!categories.includes(c.category))categories.push(c.category);});}
+function getUniqCats(){return[...new Set(cards.map(c=>c.category))].filter(x=>categories.includes(x)).sort();}
+function filteredStudy(){return activeStudyFilter==='Todos'?cards:cards.filter(c=>c.category===activeStudyFilter);}
+function buildOrder(){const f=filteredStudy();order=f.map(c=>cards.indexOf(c));current=Math.min(current,Math.max(0,order.length-1));}
+
+function populateCatSelect(){
+  const sel=document.getElementById('inp-cat'),cur=sel.value;
+  sel.innerHTML=categories.map(c=>`<option value="${c}">${c}</option>`).join('');
+  if(categories.includes(cur))sel.value=cur;
+}
+
+function chip(label,count,active,fn){
+  return `<button class="filter-chip${active?' active':''}" onclick="${fn}">${label} <span class="fcount">${count}</span></button>`;
+}
+function renderStudyFilters(){
+  let h=chip('Todos',cards.length,activeStudyFilter==='Todos',"setStudyFilter('Todos')");
+  getUniqCats().forEach(cat=>h+=chip(cat,cards.filter(c=>c.category===cat).length,activeStudyFilter===cat,`setStudyFilter('${cat}')`));
+  document.getElementById('study-filters').innerHTML=h;
+}
+function setStudyFilter(cat){
+  activeStudyFilter=cat;buildOrder();isFlipped=false;
+  document.getElementById('card-wrap').classList.remove('flipped');
+  renderStudyFilters();renderCard();
+}
+
+function renderCard(){
+  const f=filteredStudy();
+  const sa=document.getElementById('study-area'),se=document.getElementById('study-empty'),snf=document.getElementById('study-no-filter');
+  if(cards.length===0){sa.style.display='none';se.style.display='block';snf.style.display='none';return;}
+  if(f.length===0){sa.style.display='none';se.style.display='none';snf.style.display='block';return;}
+  sa.style.display='block';se.style.display='none';snf.style.display='none';
+  const c=cards[order[current]];
+  document.getElementById('card-tag').textContent=c.category;
+  document.getElementById('card-tag-back').textContent=c.category;
+  document.getElementById('card-question').textContent=c.question;
+  document.getElementById('card-rule').textContent=c.rule;
+  document.getElementById('card-example').innerHTML=c.example;
+  document.getElementById('card-counter').textContent=(current+1)+' / '+order.length;
+  document.getElementById('prev-btn').disabled=current===0;
+  document.getElementById('next-btn').disabled=current===order.length-1;
+  document.getElementById('progress-fill').style.width=order.length?Math.round((current/order.length)*100)+'%':'0%';
+}
+function flipCard(){isFlipped=!isFlipped;document.getElementById('card-wrap').classList.toggle('flipped',isFlipped);}
+function nextCard(){if(current<order.length-1){current++;isFlipped=false;document.getElementById('card-wrap').classList.remove('flipped');renderCard();}}
+function prevCard(){if(current>0){current--;isFlipped=false;document.getElementById('card-wrap').classList.remove('flipped');renderCard();}}
+function shuffle(){order=order.sort(()=>Math.random()-0.5);current=0;isFlipped=false;document.getElementById('card-wrap').classList.remove('flipped');renderCard();}
+function rate(level,e){
+  e.stopPropagation();stats[level]++;
+  document.getElementById('stat-easy').textContent=stats.easy;
+  document.getElementById('stat-medium').textContent=stats.medium;
+  document.getElementById('stat-hard').textContent=stats.hard;
+  const t=stats.easy+stats.medium+stats.hard;
+  document.getElementById('progress-text').textContent=t+' revisado'+(t!==1?'s':'')+' hoje';
+  if(current<order.length-1)nextCard();else{isFlipped=false;document.getElementById('card-wrap').classList.remove('flipped');}
+}
+function editCurrentCard(){if(order.length>0)openEditForm(cards[order[current]].id);}
+function openEditForm(id){
+  const c=cards.find(x=>x.id===id);if(!c)return;
+  populateCatSelect();
+  document.getElementById('edit-id').value=id;
+  document.getElementById('form-title').textContent='Editar Cartão';
+  document.getElementById('edit-hint').style.display='flex';
+  document.getElementById('inp-cat').value=c.category;
+  document.getElementById('inp-q').value=c.question;
+  document.getElementById('inp-rule').value=c.rule;
+  document.getElementById('inp-ex').value=c.example.replace(/<br>/g,'\n').replace(/<[^>]+>/g,'');
+  document.getElementById('save-label').textContent='Salvar Alterações';
+  document.getElementById('cancel-btn').style.display='block';
+  document.getElementById('save-btn').style.flex='1';
+  switchTab('add');
+}
+function cancelEdit(){resetForm();switchTab('deck');}
+function resetForm(){
+  document.getElementById('edit-id').value='';
+  document.getElementById('form-title').textContent='Novo Cartão';
+  document.getElementById('edit-hint').style.display='none';
+  document.getElementById('inp-q').value='';
+  document.getElementById('inp-rule').value='';
+  document.getElementById('inp-ex').value='';
+  document.getElementById('save-label').textContent='Adicionar Cartão';
+  document.getElementById('cancel-btn').style.display='none';
+  document.getElementById('save-btn').style.flex='';
+  populateCatSelect();
+}
+function saveCard(){
+  const q=document.getElementById('inp-q').value.trim();
+  const rule=document.getElementById('inp-rule').value.trim();
+  const ex=document.getElementById('inp-ex').value.trim();
+  const cat=document.getElementById('inp-cat').value;
+  const eid=document.getElementById('edit-id').value;
+  if(!q||!rule){alert('Preencha ao menos a pergunta e a regra.');return;}
+  const exHtml=ex?ex.replace(/\n/g,'<br>'):'—';
+  if(eid){
+    const idx=cards.findIndex(c=>String(c.id)===String(eid));
+    if(idx!==-1)cards[idx]={...cards[idx],category:cat,question:q,rule,example:exHtml};
+  }else{
+    cards.push({id:Date.now(),category:cat,question:q,rule,example:exHtml,ratings:{}});
+    activeStudyFilter=cat;
+  }
+  persist();buildOrder();renderStudyFilters();resetForm();
+  switchTab('deck');renderDeckFilters();renderDeck();renderCard();
+}
+function deleteCard(id){
+  const idx=cards.findIndex(c=>String(c.id)===String(id));
+  if(idx===-1)return;
+  if(!confirm('Remover este cartão?'))return;
+  cards.splice(idx,1);persist();
+  if(activeStudyFilter!=='Todos'&&!cards.find(c=>c.category===activeStudyFilter))activeStudyFilter='Todos';
+  if(activeDeckFilter!=='Todos'&&!cards.find(c=>c.category===activeDeckFilter))activeDeckFilter='Todos';
+  buildOrder();renderStudyFilters();renderDeckFilters();renderDeck();renderCard();
+}
+function renderDeckFilters(){
+  let h=chip('Todos',cards.length,activeDeckFilter==='Todos',"setDeckFilter('Todos')");
+  getUniqCats().forEach(cat=>h+=chip(cat,cards.filter(c=>c.category===cat).length,activeDeckFilter===cat,`setDeckFilter('${cat}')`));
+  document.getElementById('deck-filters').innerHTML=h;
+}
+function setDeckFilter(cat){activeDeckFilter=cat;renderDeckFilters();renderDeck();}
+function renderDeck(){
+  const list=document.getElementById('deck-list');
+  const filtered=activeDeckFilter==='Todos'?cards:cards.filter(c=>c.category===activeDeckFilter);
+  if(filtered.length===0){list.innerHTML='<div class="empty"><i class="ti ti-cards"></i>Nenhum cartão aqui ainda.</div>';return;}
+  list.innerHTML=filtered.map(c=>`
+    <div class="deck-item">
+      <div class="deck-item-text">
+        <span title="${c.question}">${c.question.length>50?c.question.slice(0,47)+'...':c.question}</span>
+        <span class="cbadge">${c.category}</span>
+      </div>
+      <div class="deck-item-actions">
+        <button class="act-btn edit" onclick="openEditForm(${c.id})" title="Editar"><i class="ti ti-edit"></i></button>
+        <button class="act-btn del" onclick="deleteCard(${c.id})" title="Excluir"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`).join('');
+}
+function renderCats(){
+  const list=document.getElementById('cat-list');
+  if(categories.length===0){list.innerHTML='<div class="empty">Nenhuma categoria.</div>';return;}
+  list.innerHTML=categories.map((cat,i)=>{
+    const count=cards.filter(c=>c.category===cat).length;
+    if(editingCatIndex===i){
+      return `<div class="cat-item">
+        <input type="text" id="cat-edit-inp" value="${cat}" style="flex:1;padding:5px 8px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius-md);background:var(--bg);color:var(--text);font-family:inherit;outline:none;" maxlength="40"
+          onkeydown="if(event.key==='Enter')saveCatEdit(${i});if(event.key==='Escape')cancelCatEdit();">
+        <button class="act-btn edit" onclick="saveCatEdit(${i})" title="Salvar"><i class="ti ti-check"></i></button>
+        <button class="act-btn" onclick="cancelCatEdit()" title="Cancelar"><i class="ti ti-x"></i></button>
+      </div>`;
+    }
+    return `<div class="cat-item">
+      <span>${cat}</span>
+      <small>${count} cartão${count!==1?'s':''}</small>
+      <button class="act-btn edit" onclick="startCatEdit(${i})" title="Renomear"><i class="ti ti-edit"></i></button>
+      <button class="act-btn del" onclick="deleteCat(${i})" title="Excluir"><i class="ti ti-trash"></i></button>
+    </div>`;
+  }).join('');
+}
+function startCatEdit(i){editingCatIndex=i;renderCats();setTimeout(()=>{const inp=document.getElementById('cat-edit-inp');if(inp){inp.focus();inp.select();}},50);}
+function cancelCatEdit(){editingCatIndex=-1;renderCats();}
+function saveCatEdit(i){
+  const inp=document.getElementById('cat-edit-inp');if(!inp)return;
+  const val=inp.value.trim();
+  if(!val){alert('Nome não pode estar vazio.');return;}
+  if(categories.includes(val)&&val!==categories[i]){alert('Já existe uma categoria com esse nome.');return;}
+  const old=categories[i];
+  categories[i]=val;
+  cards.forEach(c=>{if(c.category===old)c.category=val;});
+  if(activeStudyFilter===old)activeStudyFilter=val;
+  if(activeDeckFilter===old)activeDeckFilter=val;
+  editingCatIndex=-1;
+  persist();buildOrder();populateCatSelect();renderStudyFilters();renderDeckFilters();renderDeck();renderCats();
+}
+function deleteCat(i){
+  const cat=categories[i];
+  const count=cards.filter(c=>c.category===cat).length;
+  const msg=count>0?`A categoria "${cat}" tem ${count} cartão(s). Excluir vai remover esses cartões também. Confirma?`:`Excluir a categoria "${cat}"?`;
+  if(!confirm(msg))return;
+  cards=cards.filter(c=>c.category!==cat);
+  categories.splice(i,1);
+  if(activeStudyFilter===cat)activeStudyFilter='Todos';
+  if(activeDeckFilter===cat)activeDeckFilter='Todos';
+  persist();buildOrder();populateCatSelect();renderStudyFilters();renderDeckFilters();renderDeck();renderCats();
+}
+function addCategory(){
+  const inp=document.getElementById('new-cat-input');
+  const val=inp.value.trim();
+  if(!val){alert('Digite um nome para a categoria.');return;}
+  if(categories.includes(val)){alert('Já existe uma categoria com esse nome.');return;}
+  categories.push(val);inp.value='';
+  persist();populateCatSelect();renderCats();
+}
+
+function exportData(){
+  const data={cards,categories,exportedAt:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='flashcards-gramatica.json';a.click();
+  URL.revokeObjectURL(url);
+}
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!data.cards||!Array.isArray(data.cards)){alert('Arquivo inválido.');return;}
+      if(!confirm(`Importar ${data.cards.length} cartão(s)? Os dados atuais serão substituídos.`))return;
+      cards=data.cards;
+      categories=data.categories||[...DEFAULT_CATS];
+      syncCategories();
+      activeStudyFilter='Todos';activeDeckFilter='Todos';
+      persist();buildOrder();populateCatSelect();
+      renderStudyFilters();renderDeckFilters();renderDeck();renderCard();
+      alert('Importação concluída!');
+    }catch(err){alert('Erro ao ler o arquivo. Verifique se é um JSON válido.');}
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+function switchTab(name){
+  ['study','add','deck','cats'].forEach(t=>document.getElementById('tab-'+t).style.display=t===name?'':'none');
+  document.querySelectorAll('.tab').forEach((btn,i)=>btn.classList.toggle('active',['study','add','deck','cats'][i]===name));
+  if(name==='deck'){renderDeckFilters();renderDeck();}
+  if(name==='cats'){editingCatIndex=-1;renderCats();}
+  if(name==='add'&&!document.getElementById('edit-id').value)resetForm();
+}
+
+load();populateCatSelect();renderStudyFilters();renderCard();
+</script>
+</body>
+</html>
