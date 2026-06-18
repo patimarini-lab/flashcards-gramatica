@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gramática em Cartões</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f5f5f4; --bg3: #eeece8;
+    --text: #1a1a1a; --text2: #6b7280; --text3: #9ca3af;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.2);
+    --radius-md: 8px; --radius-lg: 12px;
+    --teal: #1D9E75; --teal-light: #E1F5EE; --teal-mid: #5DCAA5; --teal-dark: #0F6E56;
+    --blue-light: #E6F1FB; --blue: #185FA5; --blue-mid: #85B7EB;
+    --amber-light: #FAEEDA; --amber: #854F0B; --amber-mid: #EF9F27;
+    --red-light: #FCEBEB; --red: #A32D2D; --red-mid: #F09595;
+    --purple-light: #EEEDFE; --purple: #3C3489; --purple-mid: #AFA9EC;
+    --green-light: #EAF3DE; --green: #3B6D11; --green-mid: #97C459;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1e; --bg2: #2c2c2e; --bg3: #3a3a3c;
+      --text: #f2f2f7; --text2: #aeaeb2; --text3: #636366;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
+      --teal-light: #0a3d2b; --teal-dark: #5DCAA5;
+      --blue-light: #0c2340; --blue: #85B7EB;
+      --amber-light: #3d2800; --amber: #EF9F27;
+      --red-light: #3d0f0f; --red: #F09595;
+      --purple-light: #1f1c40; --purple: #AFA9EC;
+      --green-light: #1a2e09; --green: #97C459;
+    }
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; padding: 1rem; }
+  .app { max-width: 720px; margin: 0 auto; }
+
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; padding: 1rem 1.25rem; background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); flex-wrap: wrap; gap: 8px; }
+  .header h1 { font-size: 17px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .header h1 i { color: var(--teal); font-size: 20px; }
+  .header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .progress-text { font-size: 13px; color: var(--text2); }
+  .io-btn { font-size: 12px; padding: 5px 10px; border-radius: var(--radius-md); border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text2); cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.15s; }
+  .io-btn:hover { background: var(--bg); color: var(--text); }
+
+  .tabs { display: flex; border: 0.5px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 1.25rem; background: var(--bg2); flex-wrap: wrap; }
+  .tab { flex: 1; min-width: 80px; padding: 9px 6px; font-size: 12px; font-weight: 400; background: transparent; color: var(--text2); cursor: pointer; border: none; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 3px; }
+  .tab.active { background: var(--bg); color: var(--text); font-weight: 500; }
+  .tab:not(:last-child) { border-right: 0.5px solid var(--border); }
+
+  .filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.25rem; }
+  .filter-chip { font-size: 12px; padding: 5px 11px; border-radius: 20px; border: 0.5px solid var(--border); background: var(--bg2); color: var(--text2); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .filter-chip.active { background: var(--teal-light); color: var(--teal-dark); border-color: var(--teal-mid); font-weight: 500; }
+  .fcount { font-size: 11px; background: var(--bg3); color: var(--text2); border-radius: 10px; padding: 1px 6px; margin-left: 4px; border: 0.5px solid var(--border); }
+  .filter-chip.active .fcount { background: rgba(93,202,165,0.3); color: var(--teal-dark); border-color: var(--teal-mid); }
+
+  /* Flashcards */
+  .scene { width: 100%; height: 300px; perspective: 1200px; margin-bottom: 1.25rem; cursor: pointer; }
+  .card-wrap { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1); }
+  .card-wrap.flipped { transform: rotateY(180deg); }
+  .card-face { position: absolute; inset: 0; border-radius: var(--radius-lg); border: 0.5px solid var(--border); backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; flex-direction: column; padding: 1.5rem; background: var(--bg); }
+  .card-back { transform: rotateY(180deg); }
+  .card-tag { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 1rem; color: var(--teal); }
+  .card-question { font-size: 19px; font-weight: 500; color: var(--text); line-height: 1.4; flex: 1; display: flex; align-items: center; }
+  .card-hint { font-size: 13px; color: var(--text3); text-align: center; margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 5px; }
+  .card-rule { font-size: 15px; font-weight: 500; color: var(--text); line-height: 1.5; margin-bottom: 0.65rem; }
+  .card-example { font-size: 13px; color: var(--text2); line-height: 1.6; background: var(--bg2); border-left: 2px solid var(--teal); padding: 0.6rem 0.8rem; border-radius: 0 var(--radius-md) var(--radius-md) 0; margin-bottom: 0.65rem; flex: 1; }
+  .card-example em { color: var(--text); font-style: italic; }
+  .rating-row { display: flex; gap: 8px; margin-top: auto; }
+  .rating-btn { flex: 1; padding: 8px; font-size: 12px; font-weight: 500; border-radius: var(--radius-md); border: 0.5px solid; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px; }
+  .rating-btn.easy { background: var(--teal-light); color: var(--teal-dark); border-color: var(--teal-mid); }
+  .rating-btn.medium { background: var(--amber-light); color: var(--amber); border-color: var(--amber-mid); }
+  .rating-btn.hard { background: var(--red-light); color: var(--red); border-color: var(--red-mid); }
+  .rating-btn:hover { opacity: 0.8; }
+
+  .nav-row { display: flex; align-items: center; gap: 8px; margin-bottom: 1.25rem; }
+  .nav-btn { padding: 8px 14px; font-size: 13px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-md); cursor: pointer; color: var(--text); transition: all 0.15s; display: flex; align-items: center; gap: 5px; }
+  .nav-btn:hover { background: var(--bg2); }
+  .nav-btn:disabled { opacity: 0.35; cursor: default; }
+  .card-counter { flex: 1; text-align: center; font-size: 13px; color: var(--text2); }
+  .icon-btn { padding: 8px 10px; font-size: 15px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-md); cursor: pointer; color: var(--text2); transition: all 0.15s; }
+  .icon-btn:hover { background: var(--bg2); color: var(--text); }
+  .progress-bar { height: 3px; background: var(--bg2); border-radius: 2px; margin-bottom: 1.25rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--teal); border-radius: 2px; transition: width 0.3s ease; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 1.25rem; }
+  .stat-card { background: var(--bg); border-radius: var(--radius-md); padding: 0.75rem; text-align: center; border: 0.5px solid var(--border); }
+  .stat-num { font-size: 22px; font-weight: 600; }
+  .stat-lbl { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .stat-card.green .stat-num { color: var(--teal-dark); }
+  .stat-card.amber .stat-num { color: var(--amber); }
+  .stat-card.red .stat-num { color: var(--red); }
+
+  /* Geral */
+  .section { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+  .section h2 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+  .section h2 i { color: var(--teal); font-size: 17px; }
+  .field { margin-bottom: 0.85rem; }
+  .field label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 5px; }
+  .field input, .field textarea, .field select {
+    width: 100%; padding: 8px 10px; font-size: 14px; border: 0.5px solid var(--border2);
+    border-radius: var(--radius-md); background: var(--bg2); color: var(--text);
+    font-family: inherit; transition: border-color 0.15s; outline: none;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--teal); }
+  .field textarea { min-height: 72px; resize: vertical; }
+  .btn-primary { padding: 9px 18px; font-size: 13px; font-weight: 500; background: var(--teal); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; transition: opacity 0.15s; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-primary.full { width: 100%; justify-content: center; }
+  .btn-secondary { padding: 9px 18px; font-size: 13px; background: var(--bg2); color: var(--text); border: 0.5px solid var(--border); border-radius: var(--radius-md); cursor: pointer; transition: all 0.15s; }
+  .btn-secondary:hover { background: var(--bg3); }
+  .btn-row { display: flex; gap: 8px; }
+  .edit-hint { font-size: 12px; color: var(--blue); background: var(--blue-light); border-radius: var(--radius-md); padding: 7px 10px; margin-bottom: 1rem; display: none; align-items: center; gap: 6px; }
+
+  /* Deck */
+  .deck-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+  .deck-list { display: flex; flex-direction: column; gap: 7px; }
+  .deck-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-md); gap: 8px; }
+  .deck-item-text { flex: 1; min-width: 0; }
+  .deck-item-text span { font-size: 14px; color: var(--text); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .deck-item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .act-btn { background: none; border: 0.5px solid var(--border); cursor: pointer; font-size: 14px; padding: 5px 8px; border-radius: var(--radius-md); color: var(--text2); transition: all 0.15s; }
+  .act-btn.edit:hover { color: var(--blue); background: var(--blue-light); border-color: var(--blue-mid); }
+  .act-btn.del:hover { color: var(--red); background: var(--red-light); border-color: var(--red-mid); }
+
+  /* Categorias */
+  .cat-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 1rem; }
+  .cat-item { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: var(--bg2); border-radius: var(--radius-md); border: 0.5px solid var(--border); }
+  .cat-item span { flex: 1; font-size: 14px; color: var(--text); }
+  .cat-item small { font-size: 12px; color: var(--text2); white-space: nowrap; }
+  .cat-add-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cat-add-row input { flex: 1; min-width: 140px; padding: 8px 10px; font-size: 14px; border: 0.5px solid var(--border2); border-radius: var(--radius-md); background: var(--bg2); color: var(--text); font-family: inherit; outline: none; }
+  .cat-add-row input:focus { border-color: var(--teal); }
+
+  /* Misc */
+  .empty { text-align: center; padding: 2.5rem 1rem; color: var(--text2); font-size: 14px; }
+  .empty i { font-size: 32px; display: block; margin-bottom: 8px; color: var(--text3); }
+  .no-cards-msg { text-align: center; padding: 2rem 1rem; color: var(--text2); font-size: 14px; background: var(--bg2); border-radius: var(--radius-lg); }
+  .no-cards-msg i { font-size: 28px; display: block; margin-bottom: 8px; color: var(--text3); }
+  .cbadge { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 10px; background: var(--teal-light); color: var(--teal-dark); font-weight: 500; margin-top: 3px; }
+  input[type="file"] { display: none; }
+
+  /* Plano */
+  .plan-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 1.25rem; }
+  @media (max-width: 560px) { .plan-grid { grid-template-columns: repeat(2,1fr); } }
+  .kpi { background: var(--bg2); border-radius: var(--radius-md); padding: 0.9rem; text-align: center; }
+  .kpi .num { font-size: 24px; font-weight: 600; color: var(--text); }
+  .kpi .lbl { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .ring-wrap { display: flex; align-items: center; gap: 1rem; }
+  .ring-info .big { font-size: 22px; font-weight: 600; color: var(--text); }
+  .ring-info .small { font-size: 13px; color: var(--text2); margin-top: 2px; }
+  .task-list { display: flex; flex-direction: column; gap: 7px; }
+  .task-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-md); }
+  .task-check { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border2); background: var(--bg2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; color: transparent; transition: all 0.15s; margin-top: 1px; }
+  .task-check.done { background: var(--teal); border-color: var(--teal); color: white; }
+  .task-body { flex: 1; min-width: 0; }
+  .task-title { font-size: 14px; color: var(--text); line-height: 1.4; }
+  .task-title.done { color: var(--text3); text-decoration: line-through; }
+  .task-meta { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; align-items: center; }
+  .pill { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500; white-space: nowrap; }
+  .pill.cat { background: var(--purple-light); color: var(--purple); }
+  .status-select { font-size: 11px; padding: 2px 6px; border-radius: 6px; border: 0.5px solid var(--border2); background: var(--bg2); color: var(--text2); font-family: inherit; cursor: pointer; }
+  .task-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .notes-area { width: 100%; min-height: 160px; padding: 10px 12px; font-size: 14px; border: 0.5px solid var(--border2); border-radius: var(--radius-md); background: var(--bg2); color: var(--text); font-family: inherit; resize: vertical; outline: none; line-height: 1.6; }
+  .notes-area:focus { border-color: var(--teal); }
+  .notes-saved { font-size: 12px; color: var(--text3); margin-top: 6px; text-align: right; min-height: 16px; }
+  .plan-filters-left { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+
+  /* Conteúdo (estudos) */
+  .exercise-block { background: var(--bg2); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 0.75rem; border: 0.5px solid var(--border); }
+  .exercise-block .ex-num { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--teal); margin-bottom: 0.5rem; }
+  .exercise-block .field { margin-bottom: 0.65rem; }
+  .exercise-block .field:last-child { margin-bottom: 0; }
+  .answer-hint { font-size: 11px; color: var(--text3); display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+
+  /* Lista de conteúdos */
+  .content-list { display: flex; flex-direction: column; gap: 8px; }
+  .content-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; cursor: pointer; transition: border-color 0.15s; }
+  .content-card:hover { border-color: var(--teal-mid); }
+  .content-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .content-card-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .content-card-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
+  .content-card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .content-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+  .content-badge.cat { background: var(--purple-light); color: var(--purple); font-weight: 500; }
+  .content-badge.excount { background: var(--blue-light); color: var(--blue); font-weight: 500; }
+  .content-snippet { font-size: 13px; color: var(--text2); margin-top: 6px; line-height: 1.5; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+  /* Prática de exercícios */
+  .ex-practice-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+  .ex-topic-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text3); margin-bottom: 4px; }
+  .ex-topic-title { font-size: 16px; font-weight: 500; color: var(--text); margin-bottom: 0.85rem; }
+  .ex-item { margin-bottom: 1rem; }
+  .ex-item:last-child { margin-bottom: 0; }
+  .ex-enunciado { font-size: 14px; color: var(--text); margin-bottom: 6px; line-height: 1.5; }
+  .ex-input { width: 100%; padding: 8px 10px; font-size: 14px; border: 0.5px solid var(--border2); border-radius: var(--radius-md); background: var(--bg2); color: var(--text); font-family: inherit; outline: none; transition: border-color 0.15s; }
+  .ex-input:focus { border-color: var(--teal); }
+  .ex-input.correct { border-color: var(--teal-mid); background: var(--teal-light); color: var(--teal-dark); }
+  .ex-input.wrong { border-color: var(--red-mid); background: var(--red-light); color: var(--red); }
+  .ex-feedback { font-size: 12px; margin-top: 5px; display: none; align-items: flex-start; gap: 5px; line-height: 1.4; }
+  .ex-feedback.show { display: flex; }
+  .ex-feedback.ok { color: var(--teal-dark); }
+  .ex-feedback.err { color: var(--red); }
+  .ex-gabarito { font-size: 12px; color: var(--text2); margin-top: 3px; display: none; }
+  .ex-gabarito.show { display: block; }
+  .ex-actions { display: flex; gap: 8px; margin-top: 1rem; flex-wrap: wrap; }
+  .btn-check { padding: 8px 16px; font-size: 13px; font-weight: 500; background: var(--teal-light); color: var(--teal-dark); border: 0.5px solid var(--teal-mid); border-radius: var(--radius-md); cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; }
+  .btn-check:hover { background: var(--teal); color: white; border-color: var(--teal); }
+  .btn-reveal { padding: 8px 16px; font-size: 13px; background: var(--bg2); color: var(--text2); border: 0.5px solid var(--border); border-radius: var(--radius-md); cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; }
+  .btn-reveal:hover { background: var(--bg3); }
+  .btn-reset-ex { padding: 8px 16px; font-size: 13px; background: var(--bg2); color: var(--text2); border: 0.5px solid var(--border); border-radius: var(--radius-md); cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; }
+  .btn-reset-ex:hover { background: var(--bg3); }
+  .ex-score { font-size: 13px; color: var(--text2); background: var(--bg2); border-radius: var(--radius-md); padding: 5px 12px; display: inline-flex; align-items: center; gap: 5px; }
+  .ex-score.good { background: var(--teal-light); color: var(--teal-dark); }
+  .content-detail-back { font-size: 13px; color: var(--blue); background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 4px; margin-bottom: 1rem; padding: 0; }
+  .content-detail-back:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1><i class="ti ti-cards"></i>Gramática em Cartões</h1>
+    <div class="header-right">
+      <span class="progress-text" id="progress-text">0 revisados hoje</span>
+      <button class="io-btn" onclick="exportData()"><i class="ti ti-download"></i> Exportar</button>
+      <button class="io-btn" onclick="document.getElementById('import-file').click()"><i class="ti ti-upload"></i> Importar</button>
+      <input type="file" id="import-file" accept=".json" onchange="importData(event)">
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('plan')"><i class="ti ti-layout-dashboard"></i> Plano</button>
+    <button class="tab" onclick="switchTab('study')"><i class="ti ti-stack-2"></i> Cartões</button>
+    <button class="tab" onclick="switchTab('add')"><i class="ti ti-plus"></i> Cartão</button>
+    <button class="tab" onclick="switchTab('content')"><i class="ti ti-book"></i> Conteúdo</button>
+    <button class="tab" onclick="switchTab('practice')"><i class="ti ti-pencil"></i> Exercícios</button>
+    <button class="tab" onclick="switchTab('deck')"><i class="ti ti-list"></i> Baralho</button>
+    <button class="tab" onclick="switchTab('cats')"><i class="ti ti-tag"></i> Categorias</button>
+  </div>
+
+  <!-- PLANO -->
+  <div id="tab-plan">
+    <div class="plan-grid">
+      <div class="kpi"><div class="num" id="kpi-total">0</div><div class="lbl">Cartões totais</div></div>
+      <div class="kpi"><div class="num" id="kpi-todo">0</div><div class="lbl">A fazer</div></div>
+      <div class="kpi"><div class="num" id="kpi-doing">0</div><div class="lbl">Em andamento</div></div>
+      <div class="kpi"><div class="num" id="kpi-done">0</div><div class="lbl">Concluídos</div></div>
+    </div>
+    <div class="section">
+      <h2><i class="ti ti-target-arrow"></i> Progresso geral</h2>
+      <div class="ring-wrap">
+        <svg width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Progresso">
+          <circle cx="32" cy="32" r="28" fill="none" stroke="var(--bg3)" stroke-width="6"/>
+          <circle id="ring-fg" cx="32" cy="32" r="28" fill="none" stroke="var(--teal)" stroke-width="6" stroke-linecap="round" stroke-dasharray="176" stroke-dashoffset="176" transform="rotate(-90 32 32)"/>
+        </svg>
+        <div class="ring-info">
+          <div class="big" id="ring-pct">0%</div>
+          <div class="small" id="ring-text">Nenhuma tarefa concluída ainda</div>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <h2><i class="ti ti-checklist"></i> Tópicos de estudo</h2>
+      <div class="plan-filters-left" id="plan-status-filters"></div>
+      <div class="task-list" id="task-list"></div>
+      <div style="margin-top:0.85rem">
+        <div class="cat-add-row">
+          <input type="text" id="new-task-input" placeholder="Novo tópico..." maxlength="120" onkeydown="if(event.key==='Enter')addTask()">
+          <select id="new-task-cat" style="width:auto;padding:8px 10px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius-md);background:var(--bg2);color:var(--text);font-family:inherit;"></select>
+          <button class="btn-primary" onclick="addTask()"><i class="ti ti-plus"></i> Adicionar</button>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <h2><i class="ti ti-notes"></i> Anotações gerais</h2>
+      <textarea class="notes-area" id="plan-notes" placeholder="Anote dúvidas, lembretes, links de aulas..." oninput="saveNotes()"></textarea>
+      <div class="notes-saved" id="notes-saved-msg"></div>
+    </div>
+  </div>
+
+  <!-- ESTUDAR (FLASHCARDS) -->
+  <div id="tab-study" style="display:none">
+    <div class="filter-row" id="study-filters"></div>
+    <div class="stats-grid">
+      <div class="stat-card green"><div class="stat-num" id="stat-easy">0</div><div class="stat-lbl">Fácil</div></div>
+      <div class="stat-card amber"><div class="stat-num" id="stat-medium">0</div><div class="stat-lbl">Médio</div></div>
+      <div class="stat-card red"><div class="stat-num" id="stat-hard">0</div><div class="stat-lbl">Difícil</div></div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div id="study-area">
+      <div class="scene" onclick="flipCard()">
+        <div class="card-wrap" id="card-wrap">
+          <div class="card-face card-front">
+            <div class="card-tag" id="card-tag"></div>
+            <div class="card-question" id="card-question"></div>
+            <div class="card-hint"><i class="ti ti-hand-click"></i> Clique para ver a resposta</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="card-tag" id="card-tag-back"></div>
+            <div class="card-rule" id="card-rule"></div>
+            <div class="card-example" id="card-example"></div>
+            <div class="rating-row">
+              <button class="rating-btn easy" onclick="rate('easy',event)"><i class="ti ti-circle-check"></i> Fácil</button>
+              <button class="rating-btn medium" onclick="rate('medium',event)"><i class="ti ti-circle-half-2"></i> Médio</button>
+              <button class="rating-btn hard" onclick="rate('hard',event)"><i class="ti ti-circle-x"></i> Difícil</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="nav-row">
+        <button class="nav-btn" id="prev-btn" onclick="prevCard()"><i class="ti ti-arrow-left"></i> Anterior</button>
+        <span class="card-counter" id="card-counter"></span>
+        <button class="nav-btn" id="next-btn" onclick="nextCard()">Próximo <i class="ti ti-arrow-right"></i></button>
+        <button class="icon-btn" onclick="editCurrentCard()" title="Editar"><i class="ti ti-edit"></i></button>
+        <button class="icon-btn" onclick="shuffle()" title="Embaralhar"><i class="ti ti-arrows-shuffle"></i></button>
+      </div>
+    </div>
+    <div id="study-empty" class="empty" style="display:none">
+      <i class="ti ti-mood-happy"></i> Nenhum cartão ainda. Vá em <strong>Cartão</strong> para criar!
+    </div>
+    <div id="study-no-filter" class="no-cards-msg" style="display:none">
+      <i class="ti ti-filter-off"></i> Nenhum cartão nessa categoria ainda.
+    </div>
+  </div>
+
+  <!-- ADICIONAR / EDITAR CARTÃO -->
+  <div id="tab-add" style="display:none">
+    <div class="edit-hint" id="edit-hint"><i class="ti ti-edit"></i> Modo edição — alterando um cartão existente.</div>
+    <div class="section">
+      <h2 id="form-title"><i class="ti ti-plus"></i> Novo Cartão</h2>
+      <input type="hidden" id="edit-id">
+      <div class="field"><label>Categoria</label><select id="inp-cat"></select></div>
+      <div class="field"><label>Pergunta / Conceito</label><textarea id="inp-q" placeholder="Ex: Quando usar 'mas' vs 'mais'?"></textarea></div>
+      <div class="field"><label>Regra / Explicação</label><textarea id="inp-rule" placeholder="Ex: 'Mas' é conjunção adversativa."></textarea></div>
+      <div class="field"><label>Exemplo</label><textarea id="inp-ex" placeholder="Ex: Tentei, mas não consegui."></textarea></div>
+      <div class="btn-row">
+        <button class="btn-secondary" id="cancel-btn" onclick="cancelEdit()" style="display:none">Cancelar</button>
+        <button class="btn-primary full" id="save-btn" onclick="saveCard()"><i class="ti ti-check"></i> <span id="save-label">Adicionar Cartão</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTEÚDO (cadastro de estudos) -->
+  <div id="tab-content" style="display:none">
+    <div id="content-list-view">
+      <div class="filter-row" id="content-filters"></div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;">
+        <button class="btn-primary" onclick="showContentForm()"><i class="ti ti-plus"></i> Novo conteúdo</button>
+      </div>
+      <div class="content-list" id="content-list"></div>
+    </div>
+
+    <div id="content-form-view" style="display:none">
+      <button class="content-detail-back" onclick="showContentList()"><i class="ti ti-arrow-left"></i> Voltar</button>
+      <div class="edit-hint" id="content-edit-hint"><i class="ti ti-edit"></i> Editando conteúdo existente.</div>
+      <div class="section">
+        <h2><i class="ti ti-book"></i> <span id="content-form-title">Novo Conteúdo</span></h2>
+        <input type="hidden" id="content-edit-id">
+        <div class="field"><label>Tema</label><input type="text" id="ct-tema" placeholder="Ex: Uso da crase com pronomes demonstrativos" maxlength="120"></div>
+        <div class="field"><label>Categoria</label><select id="ct-cat"></select></div>
+        <div class="field"><label>Explicação</label><textarea id="ct-explicacao" placeholder="Explique o conceito, regra ou teoria..." style="min-height:100px"></textarea></div>
+        <div class="field"><label>Exemplo</label><textarea id="ct-exemplo" placeholder="Traga um exemplo prático ou mais de um..."></textarea></div>
+      </div>
+      <div class="section">
+        <h2><i class="ti ti-pencil"></i> Exercícios</h2>
+        <div id="exercises-container"></div>
+        <button class="btn-secondary" onclick="addExerciseField()" style="width:100%;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:5px;"><i class="ti ti-plus"></i> Adicionar exercício</button>
+      </div>
+      <div class="btn-row" style="margin-bottom:1rem">
+        <button class="btn-secondary" onclick="showContentList()">Cancelar</button>
+        <button class="btn-primary full" onclick="saveContent()"><i class="ti ti-check"></i> Salvar conteúdo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXERCÍCIOS (prática) -->
+  <div id="tab-practice" style="display:none">
+    <div id="practice-list-view">
+      <div class="filter-row" id="practice-filters"></div>
+      <div class="content-list" id="practice-content-list"></div>
+      <div id="practice-empty" class="empty" style="display:none">
+        <i class="ti ti-pencil-off"></i>
+        Nenhum conteúdo com exercícios ainda. Cadastre em <strong>Conteúdo</strong>.
+      </div>
+    </div>
+    <div id="practice-detail-view" style="display:none">
+      <button class="content-detail-back" onclick="closePractice()"><i class="ti ti-arrow-left"></i> Voltar</button>
+      <div id="practice-detail-content"></div>
+    </div>
+  </div>
+
+  <!-- BARALHO -->
+  <div id="tab-deck" style="display:none">
+    <div class="deck-filters" id="deck-filters"></div>
+    <div class="deck-list" id="deck-list"></div>
+  </div>
+
+  <!-- CATEGORIAS -->
+  <div id="tab-cats" style="display:none">
+    <div class="section">
+      <h2><i class="ti ti-tag"></i> Gerenciar Categorias</h2>
+      <div class="cat-list" id="cat-list"></div>
+      <div class="cat-add-row">
+        <input type="text" id="new-cat-input" placeholder="Nova categoria..." maxlength="40" onkeydown="if(event.key==='Enter')addCategory()">
+        <button class="btn-primary" onclick="addCategory()"><i class="ti ti-plus"></i> Adicionar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_CATS = ["Verbos","Substantivos","Pontuação","Concordância","Regência","Crase","Inglês","Outro"];
+const DEFAULT_CARDS = [
+  {id:1,category:"Pontuação",question:"Quando usar vírgula antes de 'mas'?",rule:"Usa-se vírgula antes de conjunções adversativas como 'mas', 'porém', 'contudo'.",example:"<em>Estudei muito, mas não passei.</em>",ratings:{}},
+  {id:2,category:"Crase",question:"Qual é a regra básica da crase?",rule:"Crase = fusão da preposição 'a' + artigo 'a'. Usa-se com palavras femininas precedidas de artigo definido.",example:"<em>Fui à cidade.</em> (a + a cidade)",ratings:{}},
+  {id:3,category:"Concordância",question:"Como funciona a concordância verbal com sujeito composto?",rule:"Sujeito composto posposto ao verbo pode concordar com o núcleo mais próximo ou ir para o plural.",example:"<em>Chegou o aluno e a professora. / Chegaram o aluno e a professora.</em>",ratings:{}},
+  {id:4,category:"Inglês",question:"Qual a diferença entre 'since' e 'for'?",rule:"'Since' = ponto de início. 'For' = duração.",example:"<em>I've lived here since 2020. / I've lived here for 4 years.</em>",ratings:{}},
+  {id:5,category:"Verbos",question:"Quando usar 'haver' vs 'ter' como verbo existencial?",rule:"Na norma culta, 'haver' impessoal não vai para o plural.",example:"<em>Há muitos problemas. ✓ / Haviam muitos problemas. ✗</em>",ratings:{}},
+  {id:6,category:"Regência",question:"'Assistir' — transitivo direto ou indireto?",rule:"No sentido de 'ver/presenciar', exige preposição 'a'.",example:"<em>Assisti ao filme. ✓ / Assisti o filme. ✗</em>",ratings:{}},
+];
+const DEFAULT_TASKS = [
+  {id:101,title:"Revisar regras de crase",category:"Crase",status:"todo"},
+  {id:102,title:"Praticar 10 frases com 'since' e 'for'",category:"Inglês",status:"doing"},
+  {id:103,title:"Ler capítulo sobre concordância verbal",category:"Concordância",status:"done"},
+];
+
+let cards=[], categories=[], current=0, isFlipped=false;
+let stats={easy:0,medium:0,hard:0}, order=[];
+let activeStudyFilter='Todos', activeDeckFilter='Todos', editingCatIndex=-1;
+let tasks=[], notes='', activeTaskFilter='Todos';
+let contents=[], activeContentFilter='Todos', activePracticeFilter='Todos';
+
+function load(){
+  try{const s=localStorage.getItem('gfc_cards_v4');cards=s?JSON.parse(s):JSON.parse(JSON.stringify(DEFAULT_CARDS));}catch(e){cards=JSON.parse(JSON.stringify(DEFAULT_CARDS));}
+  try{const s=localStorage.getItem('gfc_cats_v4');categories=s?JSON.parse(s):[...DEFAULT_CATS];}catch(e){categories=[...DEFAULT_CATS];}
+  try{const s=localStorage.getItem('gfc_tasks_v1');tasks=s?JSON.parse(s):JSON.parse(JSON.stringify(DEFAULT_TASKS));}catch(e){tasks=JSON.parse(JSON.stringify(DEFAULT_TASKS));}
+  try{notes=localStorage.getItem('gfc_notes_v1')||'';}catch(e){notes='';}
+  try{const s=localStorage.getItem('gfc_contents_v1');contents=s?JSON.parse(s):[];}catch(e){contents=[];}
+  syncCategories();buildOrder();
+}
+function persist(){
+  try{localStorage.setItem('gfc_cards_v4',JSON.stringify(cards));}catch(e){}
+  try{localStorage.setItem('gfc_cats_v4',JSON.stringify(categories));}catch(e){}
+}
+function persistTasks(){try{localStorage.setItem('gfc_tasks_v1',JSON.stringify(tasks));}catch(e){}}
+function persistNotes(){try{localStorage.setItem('gfc_notes_v1',notes);}catch(e){}}
+function persistContents(){try{localStorage.setItem('gfc_contents_v1',JSON.stringify(contents));}catch(e){}}
+
+function syncCategories(){cards.forEach(c=>{if(!categories.includes(c.category))categories.push(c.category);});}
+function getUniqCats(){return[...new Set(cards.map(c=>c.category))].filter(x=>categories.includes(x)).sort();}
+function filteredStudy(){return activeStudyFilter==='Todos'?cards:cards.filter(c=>c.category===activeStudyFilter);}
+function buildOrder(){const f=filteredStudy();order=f.map(c=>cards.indexOf(c));current=Math.min(current,Math.max(0,order.length-1));}
+
+function populateCatSelect(){
+  ['inp-cat','ct-cat','new-task-cat'].forEach(id=>{
+    const sel=document.getElementById(id);if(!sel)return;
+    const cur=sel.value;
+    sel.innerHTML=categories.map(c=>`<option value="${c}">${c}</option>`).join('');
+    if(categories.includes(cur))sel.value=cur;
+  });
+}
+
+function chip(label,count,active,fn){
+  return `<button class="filter-chip${active?' active':''}" onclick="${fn}">${label} <span class="fcount">${count}</span></button>`;
+}
+
+/* ---- Flashcards ---- */
+function renderStudyFilters(){
+  let h=chip('Todos',cards.length,activeStudyFilter==='Todos',"setStudyFilter('Todos')");
+  getUniqCats().forEach(cat=>h+=chip(cat,cards.filter(c=>c.category===cat).length,activeStudyFilter===cat,`setStudyFilter('${cat}')`));
+  document.getElementById('study-filters').innerHTML=h;
+}
+function setStudyFilter(cat){activeStudyFilter=cat;buildOrder();isFlipped=false;document.getElementById('card-wrap').classList.remove('flipped');renderStudyFilters();renderCard();}
+function renderCard(){
+  const f=filteredStudy();
+  const sa=document.getElementById('study-area'),se=document.getElementById('study-empty'),snf=document.getElementById('study-no-filter');
+  if(cards.length===0){sa.style.display='none';se.style.display='block';snf.style.display='none';return;}
+  if(f.length===0){sa.style.display='none';se.style.display='none';snf.style.display='block';return;}
+  sa.style.display='block';se.style.display='none';snf.style.display='none';
+  const c=cards[order[current]];
+  document.getElementById('card-tag').textContent=c.category;
+  document.getElementById('card-tag-back').textContent=c.category;
+  document.getElementById('card-question').textContent=c.question;
+  document.getElementById('card-rule').textContent=c.rule;
+  document.getElementById('card-example').innerHTML=c.example;
+  document.getElementById('card-counter').textContent=(current+1)+' / '+order.length;
+  document.getElementById('prev-btn').disabled=current===0;
+  document.getElementById('next-btn').disabled=current===order.length-1;
+  document.getElementById('progress-fill').style.width=order.length?Math.round((current/order.length)*100)+'%':'0%';
+}
+function flipCard(){isFlipped=!isFlipped;document.getElementById('card-wrap').classList.toggle('flipped',isFlipped);}
+function nextCard(){if(current<order.length-1){current++;isFlipped=false;document.getElementById('card-wrap').classList.remove('flipped');renderCard();}}
+function prevCard(){if(current>0){current--;isFlipped=false;document.getElementById('card-wrap').classList.remove('flipped');renderCard();}}
+function shuffle(){order=order.sort(()=>Math.random()-0.5);current=0;isFlipped=false;document.getElementById('card-wrap').classList.remove('flipped');renderCard();}
+function rate(level,e){
+  e.stopPropagation();stats[level]++;
+  document.getElementById('stat-easy').textContent=stats.easy;
+  document.getElementById('stat-medium').textContent=stats.medium;
+  document.getElementById('stat-hard').textContent=stats.hard;
+  const t=stats.easy+stats.medium+stats.hard;
+  document.getElementById('progress-text').textContent=t+' revisado'+(t!==1?'s':'')+' hoje';
+  if(current<order.length-1)nextCard();else{isFlipped=false;document.getElementById('card-wrap').classList.remove('flipped');}
+}
+function editCurrentCard(){if(order.length>0)openEditForm(cards[order[current]].id);}
+function openEditForm(id){
+  const c=cards.find(x=>x.id===id);if(!c)return;
+  populateCatSelect();
+  document.getElementById('edit-id').value=id;
+  document.getElementById('form-title').innerHTML='<i class="ti ti-edit"></i> Editar Cartão';
+  document.getElementById('edit-hint').style.display='flex';
+  document.getElementById('inp-cat').value=c.category;
+  document.getElementById('inp-q').value=c.question;
+  document.getElementById('inp-rule').value=c.rule;
+  document.getElementById('inp-ex').value=c.example.replace(/<br>/g,'\n').replace(/<[^>]+>/g,'');
+  document.getElementById('save-label').textContent='Salvar Alterações';
+  document.getElementById('cancel-btn').style.display='block';
+  document.getElementById('save-btn').style.flex='1';
+  switchTab('add');
+}
+function cancelEdit(){resetForm();switchTab('deck');}
+function resetForm(){
+  document.getElementById('edit-id').value='';
+  document.getElementById('form-title').innerHTML='<i class="ti ti-plus"></i> Novo Cartão';
+  document.getElementById('edit-hint').style.display='none';
+  document.getElementById('inp-q').value='';
+  document.getElementById('inp-rule').value='';
+  document.getElementById('inp-ex').value='';
+  document.getElementById('save-label').textContent='Adicionar Cartão';
+  document.getElementById('cancel-btn').style.display='none';
+  document.getElementById('save-btn').style.flex='';
+  populateCatSelect();
+}
+function saveCard(){
+  const q=document.getElementById('inp-q').value.trim();
+  const rule=document.getElementById('inp-rule').value.trim();
+  const ex=document.getElementById('inp-ex').value.trim();
+  const cat=document.getElementById('inp-cat').value;
+  const eid=document.getElementById('edit-id').value;
+  if(!q||!rule){alert('Preencha ao menos a pergunta e a regra.');return;}
+  const exHtml=ex?ex.replace(/\n/g,'<br>'):'—';
+  if(eid){
+    const idx=cards.findIndex(c=>String(c.id)===String(eid));
+    if(idx!==-1)cards[idx]={...cards[idx],category:cat,question:q,rule,example:exHtml};
+  }else{
+    cards.push({id:Date.now(),category:cat,question:q,rule,example:exHtml,ratings:{}});
+    activeStudyFilter=cat;
+  }
+  persist();buildOrder();renderStudyFilters();resetForm();
+  switchTab('deck');renderDeckFilters();renderDeck();renderCard();
+}
+function deleteCard(id){
+  const idx=cards.findIndex(c=>String(c.id)===String(id));
+  if(idx===-1)return;
+  if(!confirm('Remover este cartão?'))return;
+  cards.splice(idx,1);persist();
+  if(activeStudyFilter!=='Todos'&&!cards.find(c=>c.category===activeStudyFilter))activeStudyFilter='Todos';
+  if(activeDeckFilter!=='Todos'&&!cards.find(c=>c.category===activeDeckFilter))activeDeckFilter='Todos';
+  buildOrder();renderStudyFilters();renderDeckFilters();renderDeck();renderCard();
+}
+
+/* ---- Baralho ---- */
+function renderDeckFilters(){
+  let h=chip('Todos',cards.length,activeDeckFilter==='Todos',"setDeckFilter('Todos')");
+  getUniqCats().forEach(cat=>h+=chip(cat,cards.filter(c=>c.category===cat).length,activeDeckFilter===cat,`setDeckFilter('${cat}')`));
+  document.getElementById('deck-filters').innerHTML=h;
+}
+function setDeckFilter(cat){activeDeckFilter=cat;renderDeckFilters();renderDeck();}
+function renderDeck(){
+  const list=document.getElementById('deck-list');
+  const filtered=activeDeckFilter==='Todos'?cards:cards.filter(c=>c.category===activeDeckFilter);
+  if(filtered.length===0){list.innerHTML='<div class="empty"><i class="ti ti-cards"></i>Nenhum cartão aqui ainda.</div>';return;}
+  list.innerHTML=filtered.map(c=>`
+    <div class="deck-item">
+      <div class="deck-item-text">
+        <span title="${c.question}">${c.question.length>52?c.question.slice(0,49)+'...':c.question}</span>
+        <span class="cbadge">${c.category}</span>
+      </div>
+      <div class="deck-item-actions">
+        <button class="act-btn edit" onclick="openEditForm(${c.id})" title="Editar"><i class="ti ti-edit"></i></button>
+        <button class="act-btn del" onclick="deleteCard(${c.id})" title="Excluir"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`).join('');
+}
+
+/* ---- Categorias ---- */
+function renderCats(){
+  const list=document.getElementById('cat-list');
+  if(categories.length===0){list.innerHTML='<div class="empty">Nenhuma categoria.</div>';return;}
+  list.innerHTML=categories.map((cat,i)=>{
+    const cc=cards.filter(c=>c.category===cat).length;
+    const tc=tasks.filter(t=>t.category===cat).length;
+    const cts=contents.filter(c=>c.category===cat).length;
+    if(editingCatIndex===i){
+      return `<div class="cat-item">
+        <input type="text" id="cat-edit-inp" value="${cat}" style="flex:1;padding:5px 8px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius-md);background:var(--bg);color:var(--text);font-family:inherit;outline:none;" maxlength="40"
+          onkeydown="if(event.key==='Enter')saveCatEdit(${i});if(event.key==='Escape')cancelCatEdit();">
+        <button class="act-btn edit" onclick="saveCatEdit(${i})"><i class="ti ti-check"></i></button>
+        <button class="act-btn" onclick="cancelCatEdit()"><i class="ti ti-x"></i></button>
+      </div>`;
+    }
+    return `<div class="cat-item">
+      <span>${cat}</span>
+      <small>${cc} cartão${cc!==1?'s':''} · ${cts} conteúdo${cts!==1?'s':''}</small>
+      <button class="act-btn edit" onclick="startCatEdit(${i})"><i class="ti ti-edit"></i></button>
+      <button class="act-btn del" onclick="deleteCat(${i})"><i class="ti ti-trash"></i></button>
+    </div>`;
+  }).join('');
+}
+function startCatEdit(i){editingCatIndex=i;renderCats();setTimeout(()=>{const inp=document.getElementById('cat-edit-inp');if(inp){inp.focus();inp.select();}},50);}
+function cancelCatEdit(){editingCatIndex=-1;renderCats();}
+function saveCatEdit(i){
+  const inp=document.getElementById('cat-edit-inp');if(!inp)return;
+  const val=inp.value.trim();
+  if(!val){alert('Nome não pode estar vazio.');return;}
+  if(categories.includes(val)&&val!==categories[i]){alert('Já existe uma categoria com esse nome.');return;}
+  const old=categories[i];
+  categories[i]=val;
+  cards.forEach(c=>{if(c.category===old)c.category=val;});
+  tasks.forEach(t=>{if(t.category===old)t.category=val;});
+  contents.forEach(c=>{if(c.category===old)c.category=val;});
+  if(activeStudyFilter===old)activeStudyFilter=val;
+  if(activeDeckFilter===old)activeDeckFilter=val;
+  editingCatIndex=-1;
+  persist();persistTasks();persistContents();buildOrder();populateCatSelect();
+  renderStudyFilters();renderDeckFilters();renderDeck();renderCats();renderPlan();renderContentList();renderPracticeList();
+}
+function deleteCat(i){
+  const cat=categories[i];
+  const cc=cards.filter(c=>c.category===cat).length;
+  const tc=tasks.filter(t=>t.category===cat).length;
+  const cts=contents.filter(c=>c.category===cat).length;
+  let msg=`Excluir a categoria "${cat}"?`;
+  if(cc>0||tc>0||cts>0)msg=`A categoria "${cat}" tem ${cc} cartão(s), ${cts} conteúdo(s) e ${tc} tópico(s). Excluir vai remover todos esses itens. Confirma?`;
+  if(!confirm(msg))return;
+  cards=cards.filter(c=>c.category!==cat);
+  tasks=tasks.filter(t=>t.category!==cat);
+  contents=contents.filter(c=>c.category!==cat);
+  categories.splice(i,1);
+  if(activeStudyFilter===cat)activeStudyFilter='Todos';
+  if(activeDeckFilter===cat)activeDeckFilter='Todos';
+  persist();persistTasks();persistContents();buildOrder();populateCatSelect();
+  renderStudyFilters();renderDeckFilters();renderDeck();renderCats();renderPlan();renderContentList();renderPracticeList();
+}
+function addCategory(){
+  const inp=document.getElementById('new-cat-input');
+  const val=inp.value.trim();
+  if(!val){alert('Digite um nome.');return;}
+  if(categories.includes(val)){alert('Já existe.');return;}
+  categories.push(val);inp.value='';
+  persist();populateCatSelect();renderCats();renderPlan();
+}
+
+/* ---- Plano ---- */
+function renderPlan(){
+  document.getElementById('kpi-total').textContent=cards.length;
+  document.getElementById('kpi-todo').textContent=tasks.filter(t=>t.status==='todo').length;
+  document.getElementById('kpi-doing').textContent=tasks.filter(t=>t.status==='doing').length;
+  document.getElementById('kpi-done').textContent=tasks.filter(t=>t.status==='done').length;
+  const total=tasks.length,done=tasks.filter(t=>t.status==='done').length;
+  const pct=total?Math.round((done/total)*100):0;
+  document.getElementById('ring-fg').setAttribute('stroke-dashoffset',Math.round(176-(176*pct/100)));
+  document.getElementById('ring-pct').textContent=pct+'%';
+  document.getElementById('ring-text').textContent=total===0?'Nenhum tópico cadastrado ainda':`${done} de ${total} tópico${total!==1?'s':''} concluído${done!==1?'s':''}`;
+  renderTaskFilters();renderTaskList();
+  document.getElementById('plan-notes').value=notes;
+}
+function renderTaskFilters(){
+  const counts={Todos:tasks.length,todo:tasks.filter(t=>t.status==='todo').length,doing:tasks.filter(t=>t.status==='doing').length,done:tasks.filter(t=>t.status==='done').length};
+  const labels={Todos:'Todos',todo:'A fazer',doing:'Em andamento',done:'Concluído'};
+  let h='';['Todos','todo','doing','done'].forEach(k=>h+=chip(labels[k],counts[k],activeTaskFilter===k,`setTaskFilter('${k}')`));
+  document.getElementById('plan-status-filters').innerHTML=h;
+}
+function setTaskFilter(k){activeTaskFilter=k;renderTaskFilters();renderTaskList();}
+function renderTaskList(){
+  const list=document.getElementById('task-list');
+  const filtered=activeTaskFilter==='Todos'?tasks:tasks.filter(t=>t.status===activeTaskFilter);
+  if(filtered.length===0){list.innerHTML='<div class="empty"><i class="ti ti-checklist"></i>Nenhum tópico aqui ainda.</div>';return;}
+  list.innerHTML=filtered.map(t=>`
+    <div class="task-item">
+      <button class="task-check${t.status==='done'?' done':''}" onclick="toggleTaskDone(${t.id})" aria-label="Concluir"><i class="ti ti-check"></i></button>
+      <div class="task-body">
+        <div class="task-title${t.status==='done'?' done':''}">${t.title}</div>
+        <div class="task-meta">
+          <span class="pill cat">${t.category}</span>
+          <select class="status-select" onchange="setTaskStatus(${t.id},this.value)">
+            <option value="todo"${t.status==='todo'?' selected':''}>A fazer</option>
+            <option value="doing"${t.status==='doing'?' selected':''}>Em andamento</option>
+            <option value="done"${t.status==='done'?' selected':''}>Concluído</option>
+          </select>
+        </div>
+      </div>
+      <div class="task-actions"><button class="act-btn del" onclick="deleteTask(${t.id})"><i class="ti ti-trash"></i></button></div>
+    </div>`).join('');
+}
+function toggleTaskDone(id){const t=tasks.find(x=>x.id===id);if(!t)return;t.status=t.status==='done'?'todo':'done';persistTasks();renderPlan();}
+function setTaskStatus(id,status){const t=tasks.find(x=>x.id===id);if(!t)return;t.status=status;persistTasks();renderPlan();}
+function deleteTask(id){if(!confirm('Remover este tópico?'))return;tasks=tasks.filter(t=>t.id!==id);persistTasks();renderPlan();}
+function addTask(){
+  const inp=document.getElementById('new-task-input'),title=inp.value.trim();
+  if(!title){alert('Digite o nome do tópico.');return;}
+  const cat=document.getElementById('new-task-cat').value||categories[0]||'Outro';
+  tasks.push({id:Date.now(),title,category:cat,status:'todo'});
+  inp.value='';persistTasks();renderPlan();
+}
+function saveNotes(){
+  notes=document.getElementById('plan-notes').value;persistNotes();
+  const msg=document.getElementById('notes-saved-msg');msg.textContent='Salvo';
+  clearTimeout(window._notesTimer);window._notesTimer=setTimeout(()=>{msg.textContent='';},1500);
+}
+
+/* ---- Conteúdo ---- */
+let exerciseCount=0;
+function showContentForm(id){
+  document.getElementById('content-list-view').style.display='none';
+  document.getElementById('content-form-view').style.display='block';
+  exerciseCount=0;
+  document.getElementById('exercises-container').innerHTML='';
+  if(id){
+    const c=contents.find(x=>x.id===id);if(!c)return;
+    document.getElementById('content-edit-id').value=id;
+    document.getElementById('content-form-title').textContent='Editar Conteúdo';
+    document.getElementById('content-edit-hint').style.display='flex';
+    document.getElementById('ct-tema').value=c.tema;
+    document.getElementById('ct-cat').value=c.category;
+    document.getElementById('ct-explicacao').value=c.explicacao;
+    document.getElementById('ct-exemplo').value=c.exemplo;
+    (c.exercises||[]).forEach(ex=>addExerciseField(ex));
+  } else {
+    document.getElementById('content-edit-id').value='';
+    document.getElementById('content-form-title').textContent='Novo Conteúdo';
+    document.getElementById('content-edit-hint').style.display='none';
+    document.getElementById('ct-tema').value='';
+    document.getElementById('ct-explicacao').value='';
+    document.getElementById('ct-exemplo').value='';
+    populateCatSelect();
+    addExerciseField();addExerciseField();addExerciseField();
+  }
+  populateCatSelect();
+}
+function showContentList(){
+  document.getElementById('content-list-view').style.display='block';
+  document.getElementById('content-form-view').style.display='none';
+  renderContentList();
+}
+function addExerciseField(data){
+  exerciseCount++;
+  const n=exerciseCount;
+  const enunciado=(data&&data.enunciado)||'';
+  const resposta=(data&&data.resposta)||'';
+  const container=document.getElementById('exercises-container');
+  const div=document.createElement('div');
+  div.className='exercise-block';
+  div.id=`ex-block-${n}`;
+  div.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+      <div class="ex-num">Exercício ${n}</div>
+      <button class="act-btn del" onclick="removeExercise(${n})" title="Remover exercício"><i class="ti ti-trash"></i></button>
+    </div>
+    <div class="field">
+      <label>Enunciado do exercício</label>
+      <textarea id="ex-enunciado-${n}" placeholder="Ex: Complete a frase com a forma correta: Fui ___ escola.">${enunciado}</textarea>
+    </div>
+    <div class="field">
+      <div class="answer-hint"><i class="ti ti-eye-off" style="font-size:13px"></i> A resposta não aparecerá durante a prática</div>
+      <label>Resposta / gabarito</label>
+      <textarea id="ex-resposta-${n}" placeholder="Ex: à escola" style="min-height:52px">${resposta}</textarea>
+    </div>`;
+  container.appendChild(div);
+}
+function removeExercise(n){
+  const el=document.getElementById(`ex-block-${n}`);
+  if(el)el.remove();
+}
+function saveContent(){
+  const tema=document.getElementById('ct-tema').value.trim();
+  const cat=document.getElementById('ct-cat').value;
+  const explicacao=document.getElementById('ct-explicacao').value.trim();
+  const exemplo=document.getElementById('ct-exemplo').value.trim();
+  if(!tema){alert('Informe o tema.');return;}
+  const exercises=[];
+  document.querySelectorAll('.exercise-block').forEach(block=>{
+    const n=block.id.replace('ex-block-','');
+    const enunciado=document.getElementById(`ex-enunciado-${n}`).value.trim();
+    const resposta=document.getElementById(`ex-resposta-${n}`).value.trim();
+    if(enunciado)exercises.push({enunciado,resposta});
+  });
+  const eid=document.getElementById('content-edit-id').value;
+  if(eid){
+    const idx=contents.findIndex(c=>String(c.id)===String(eid));
+    if(idx!==-1)contents[idx]={...contents[idx],tema,category:cat,explicacao,exemplo,exercises};
+  } else {
+    contents.push({id:Date.now(),tema,category:cat,explicacao,exemplo,exercises});
+  }
+  persistContents();showContentList();renderPracticeList();
+}
+function deleteContent(id){
+  if(!confirm('Remover este conteúdo?'))return;
+  contents=contents.filter(c=>c.id!==id);
+  persistContents();renderContentList();renderPracticeList();
+}
+function renderContentFilters(){
+  const cats=[...new Set(contents.map(c=>c.category))].sort();
+  let h=chip('Todos',contents.length,activeContentFilter==='Todos',"setContentFilter('Todos')");
+  cats.forEach(cat=>h+=chip(cat,contents.filter(c=>c.category===cat).length,activeContentFilter===cat,`setContentFilter('${cat}')`));
+  document.getElementById('content-filters').innerHTML=h;
+}
+function setContentFilter(cat){activeContentFilter=cat;renderContentFilters();renderContentList();}
+function renderContentList(){
+  renderContentFilters();
+  const list=document.getElementById('content-list');
+  const filtered=activeContentFilter==='Todos'?contents:contents.filter(c=>c.category===activeContentFilter);
+  if(filtered.length===0){
+    list.innerHTML='<div class="empty"><i class="ti ti-book"></i>Nenhum conteúdo ainda. Clique em "Novo conteúdo".</div>';return;
+  }
+  list.innerHTML=filtered.map(c=>`
+    <div class="content-card">
+      <div class="content-card-header">
+        <div style="flex:1;min-width:0">
+          <div class="content-card-title">${c.tema}</div>
+          <div class="content-card-meta">
+            <span class="content-badge cat">${c.category}</span>
+            <span class="content-badge excount"><i class="ti ti-pencil" style="font-size:11px;vertical-align:-1px"></i> ${(c.exercises||[]).length} exercício${(c.exercises||[]).length!==1?'s':''}</span>
+          </div>
+          ${c.explicacao?`<div class="content-snippet">${c.explicacao}</div>`:''}
+        </div>
+        <div class="content-card-actions">
+          <button class="act-btn edit" onclick="showContentForm(${c.id})" title="Editar"><i class="ti ti-edit"></i></button>
+          <button class="act-btn del" onclick="deleteContent(${c.id})" title="Excluir"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+/* ---- Exercícios (prática) ---- */
+function renderPracticeFilters(){
+  const withEx=contents.filter(c=>(c.exercises||[]).length>0);
+  const cats=[...new Set(withEx.map(c=>c.category))].sort();
+  let h=chip('Todos',withEx.length,activePracticeFilter==='Todos',"setPracticeFilter('Todos')");
+  cats.forEach(cat=>h+=chip(cat,withEx.filter(c=>c.category===cat).length,activePracticeFilter===cat,`setPracticeFilter('${cat}')`));
+  document.getElementById('practice-filters').innerHTML=h;
+}
+function setPracticeFilter(cat){activePracticeFilter=cat;renderPracticeFilters();renderPracticeList();}
+function renderPracticeList(){
+  renderPracticeFilters();
+  const empty=document.getElementById('practice-empty');
+  const list=document.getElementById('practice-content-list');
+  const withEx=contents.filter(c=>(c.exercises||[]).length>0);
+  const filtered=activePracticeFilter==='Todos'?withEx:withEx.filter(c=>c.category===activePracticeFilter);
+  if(filtered.length===0){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML=filtered.map(c=>`
+    <div class="content-card" onclick="openPractice(${c.id})">
+      <div class="content-card-header">
+        <div style="flex:1;min-width:0">
+          <div class="content-card-title">${c.tema}</div>
+          <div class="content-card-meta">
+            <span class="content-badge cat">${c.category}</span>
+            <span class="content-badge excount"><i class="ti ti-pencil" style="font-size:11px;vertical-align:-1px"></i> ${c.exercises.length} exercício${c.exercises.length!==1?'s':''}</span>
+          </div>
+        </div>
+        <i class="ti ti-chevron-right" style="color:var(--text3);font-size:18px;flex-shrink:0;margin-top:2px"></i>
+      </div>
+    </div>`).join('');
+}
+function openPractice(id){
+  const c=contents.find(x=>x.id===id);if(!c)return;
+  document.getElementById('practice-list-view').style.display='none';
+  const detail=document.getElementById('practice-detail-view');
+  detail.style.display='block';
+
+  let exHtml=c.exercises.map((ex,i)=>`
+    <div class="ex-item">
+      <div class="ex-enunciado"><strong>${i+1}.</strong> ${ex.enunciado.replace(/\n/g,'<br>')}</div>
+      <input class="ex-input" id="ex-inp-${id}-${i}" type="text" placeholder="Sua resposta..." autocomplete="off" spellcheck="false">
+      <div class="ex-feedback" id="ex-fb-${id}-${i}"></div>
+      <div class="ex-gabarito" id="ex-gb-${id}-${i}"></div>
+    </div>`).join('');
+
+  document.getElementById('practice-detail-content').innerHTML=`
+    <div class="ex-practice-card">
+      <div class="ex-topic-label">${c.category}</div>
+      <div class="ex-topic-title">${c.tema}</div>
+      ${c.explicacao?`<div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:0.85rem;padding:0.6rem 0.8rem;background:var(--bg2);border-left:2px solid var(--teal);border-radius:0 var(--radius-md) var(--radius-md) 0">${c.explicacao.replace(/\n/g,'<br>')}</div>`:''}
+      ${exHtml}
+      <div class="ex-actions">
+        <button class="btn-check" onclick="checkAnswers(${id})"><i class="ti ti-check"></i> Verificar respostas</button>
+        <button class="btn-reveal" onclick="revealAll(${id})"><i class="ti ti-eye"></i> Ver gabaritos</button>
+        <button class="btn-reset-ex" onclick="resetExercises(${id})"><i class="ti ti-refresh"></i> Limpar</button>
+      </div>
+      <div id="ex-score-${id}" style="margin-top:0.75rem;display:none"></div>
+    </div>`;
+  detail.scrollTop=0;
+}
+function closePractice(){
+  document.getElementById('practice-list-view').style.display='block';
+  document.getElementById('practice-detail-view').style.display='none';
+}
+function normalize(s){return s.trim().toLowerCase().replace(/[.,!?;:]/g,'').replace(/\s+/g,' ');}
+function checkAnswers(id){
+  const c=contents.find(x=>x.id===id);if(!c)return;
+  let correct=0;
+  c.exercises.forEach((ex,i)=>{
+    const inp=document.getElementById(`ex-inp-${id}-${i}`);
+    const fb=document.getElementById(`ex-fb-${id}-${i}`);
+    const gb=document.getElementById(`ex-gb-${id}-${i}`);
+    if(!inp)return;
+    const val=inp.value.trim();
+    if(!val){fb.className='ex-feedback';fb.style.display='none';return;}
+    const ok=ex.resposta&&normalize(val)===normalize(ex.resposta);
+    if(ok){
+      inp.className='ex-input correct';
+      fb.className='ex-feedback show ok';
+      fb.innerHTML='<i class="ti ti-circle-check" style="font-size:14px;flex-shrink:0"></i> Correto!';
+      correct++;
+    } else {
+      inp.className='ex-input wrong';
+      fb.className='ex-feedback show err';
+      fb.innerHTML='<i class="ti ti-circle-x" style="font-size:14px;flex-shrink:0"></i> Tente novamente.';
+    }
+    gb.className='ex-gabarito';
+  });
+  const total=c.exercises.filter(ex=>ex.resposta).length;
+  const sc=document.getElementById(`ex-score-${id}`);
+  sc.style.display='block';
+  sc.innerHTML=`<span class="ex-score${correct===total&&total>0?' good':''}">${correct} de ${total} correto${total!==1?'s':''}</span>`;
+}
+function revealAll(id){
+  const c=contents.find(x=>x.id===id);if(!c)return;
+  c.exercises.forEach((ex,i)=>{
+    const gb=document.getElementById(`ex-gb-${id}-${i}`);
+    if(gb&&ex.resposta){
+      gb.className='ex-gabarito show';
+      gb.innerHTML=`<strong>Gabarito:</strong> ${ex.resposta}`;
+    }
+  });
+}
+function resetExercises(id){
+  const c=contents.find(x=>x.id===id);if(!c)return;
+  c.exercises.forEach((ex,i)=>{
+    const inp=document.getElementById(`ex-inp-${id}-${i}`);
+    const fb=document.getElementById(`ex-fb-${id}-${i}`);
+    const gb=document.getElementById(`ex-gb-${id}-${i}`);
+    if(inp){inp.value='';inp.className='ex-input';}
+    if(fb){fb.className='ex-feedback';fb.innerHTML='';}
+    if(gb){gb.className='ex-gabarito';gb.innerHTML='';}
+  });
+  const sc=document.getElementById(`ex-score-${id}`);
+  if(sc)sc.style.display='none';
+}
+
+/* ---- Export / Import ---- */
+function exportData(){
+  const data={cards,categories,tasks,notes,contents,exportedAt:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='flashcards-gramatica.json';a.click();
+  URL.revokeObjectURL(url);
+}
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!data.cards||!Array.isArray(data.cards)){alert('Arquivo inválido.');return;}
+      if(!confirm(`Importar ${data.cards.length} cartão(s) e ${(data.contents||[]).length} conteúdo(s)? Os dados atuais serão substituídos.`))return;
+      cards=data.cards;categories=data.categories||[...DEFAULT_CATS];
+      tasks=data.tasks||[];notes=data.notes||'';contents=data.contents||[];
+      syncCategories();activeStudyFilter='Todos';activeDeckFilter='Todos';activeTaskFilter='Todos';activeContentFilter='Todos';activePracticeFilter='Todos';
+      persist();persistTasks();persistNotes();persistContents();
+      buildOrder();populateCatSelect();
+      renderStudyFilters();renderDeckFilters();renderDeck();renderCard();renderPlan();renderContentList();renderPracticeList();
+      alert('Importação concluída!');
+    }catch(err){alert('Erro ao ler o arquivo.');}
+  };
+  reader.readAsText(file);e.target.value='';
+}
+
+/* ---- Abas ---- */
+const TAB_NAMES=['plan','study','add','content','practice','deck','cats'];
+function switchTab(name){
+  TAB_NAMES.forEach(t=>document.getElementById('tab-'+t).style.display=t===name?'':'none');
+  document.querySelectorAll('.tab').forEach((btn,i)=>btn.classList.toggle('active',TAB_NAMES[i]===name));
+  if(name==='deck'){renderDeckFilters();renderDeck();}
+  if(name==='cats'){editingCatIndex=-1;renderCats();}
+  if(name==='plan'){renderPlan();}
+  if(name==='add'&&!document.getElementById('edit-id').value)resetForm();
+  if(name==='content'){showContentList();}
+  if(name==='practice'){renderPracticeList();}
+}
+
+/* ---- Init ---- */
+load();populateCatSelect();renderStudyFilters();renderCard();renderPlan();renderContentList();renderPracticeList();
+</script>
+</body>
+</html>
